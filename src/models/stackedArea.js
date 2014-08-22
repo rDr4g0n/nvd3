@@ -12,6 +12,7 @@ nv.models.stackedArea = function() {
     , id = Math.floor(Math.random() * 100000) //Create semi-unique ID incase user doesn't selet one
     , getX = function(d) { return d.x } // accessor to get the x value from a data point
     , getY = function(d) { return d.y } // accessor to get the y value from a data point
+    , defined = function(d,i) { return getY(d,i) !== null } // allows area to be not be drawn when it is not defined
     , style = 'stack'
     , offset = 'zero'
     , order = 'default'
@@ -132,6 +133,7 @@ nv.models.stackedArea = function() {
       g   .attr('clip-path', clipEdge ? 'url(#nv-edge-clip-' + id + ')' : '');
 
       var area = d3.svg.area()
+          .defined(defined)
           .x(function(d,i)  { return x(getX(d,i)) })
           .y0(function(d) {
               return y(d.display.y0)
