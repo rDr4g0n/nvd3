@@ -214,7 +214,7 @@ window.nv.tooltip.* also has various helper methods.
                 top = Math.floor(top/snapDistance) * snapDistance;
             }
 
-            nv.tooltip.calcTooltipPosition([left,top], gravity, distance, container);
+            nv.tooltip.calcTooltipPosition([left,top], gravity, distance, container, boundRect);
             return nvtooltip;
         };
 
@@ -387,7 +387,7 @@ window.nv.tooltip.* also has various helper methods.
   //gravity = how to orient the tooltip
   //dist = how far away from the mouse to place tooltip
   //container = tooltip DIV
-  nv.tooltip.calcTooltipPosition = function(pos, gravity, dist, container) {
+  nv.tooltip.calcTooltipPosition = function(pos, gravity, dist, container, boundRect) {
 
             var height = parseInt(container.offsetHeight),
                 width = parseInt(container.offsetWidth),
@@ -427,6 +427,8 @@ window.nv.tooltip.* also has various helper methods.
                 var tLeft = tooltipLeft(container);
                 var tTop = tooltipTop(container);
                 if (tLeft + width > windowWidth) left = pos[0] - width - dist;
+                // if tooltip will appear outside of the chart
+                if (left + width > boundRect.width) left = pos[0] - width - dist;
                 if (tTop < scrollTop) top = scrollTop + 5;
                 if (tTop + height > scrollTop + windowHeight) top = scrollTop + windowHeight - tTop + top - height;
                 break;
