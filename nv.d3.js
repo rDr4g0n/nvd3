@@ -590,7 +590,7 @@ window.nv.tooltip.* also has various helper methods.
                 top = Math.floor(top/snapDistance) * snapDistance;
             }
 
-            nv.tooltip.calcTooltipPosition([left,top], gravity, distance, container);
+            nv.tooltip.calcTooltipPosition([left,top], gravity, distance, container, boundRect);
             return nvtooltip;
         };
 
@@ -763,7 +763,7 @@ window.nv.tooltip.* also has various helper methods.
   //gravity = how to orient the tooltip
   //dist = how far away from the mouse to place tooltip
   //container = tooltip DIV
-  nv.tooltip.calcTooltipPosition = function(pos, gravity, dist, container) {
+  nv.tooltip.calcTooltipPosition = function(pos, gravity, dist, container, boundRect) {
 
             var height = parseInt(container.offsetHeight),
                 width = parseInt(container.offsetWidth),
@@ -803,6 +803,8 @@ window.nv.tooltip.* also has various helper methods.
                 var tLeft = tooltipLeft(container);
                 var tTop = tooltipTop(container);
                 if (tLeft + width > windowWidth) left = pos[0] - width - dist;
+                // if tooltip will appear outside of the chart
+                if (left + width > boundRect.width) left = pos[0] - width - dist;
                 if (tTop < scrollTop) top = scrollTop + 5;
                 if (tTop + height > scrollTop + windowHeight) top = scrollTop + windowHeight - tTop + top - height;
                 break;
@@ -4650,7 +4652,8 @@ nv.models.indentedTree = function() {
 
             d3.select(this).select('span')
               .attr('class', d3.functor(column.classes) )
-              .text(function(d) { return column.format ? (d[column.key] ? column.format(d[column.key]) : '-') :  (d[column.key] || '-'); });
+              .text(function(d) { return column.format ? column.format(d) :
+                                        (d[column.key] || '-') });
           });
 
         if  (column.showCount) {
@@ -4958,7 +4961,7 @@ nv.models.indentedTree = function() {
               var legendText = d3.select(this).select('text');
               var nodeTextLength;
               try {
-                nodeTextLength = legendText.getComputedTextLength();
+                nodeTextLength = legendText.node().getComputedTextLength();
                 // If the legendText is display:none'd (nodeTextLength == 0), simulate an error so we approximate, instead
                 if(nodeTextLength <= 0) throw Error();
               }
@@ -6687,6 +6690,7 @@ nv.models.lineWithFocusChart = function() {
                 .map(function(d,i) {
                   return {
                     key: d.key,
+                    area: d.area,
                     values: d.values.filter(function(d,i) {
                       return lines.x()(d,i) >= extent[0] && lines.x()(d,i) <= extent[1];
                     })
@@ -10265,6 +10269,7 @@ nv.models.pie = function() {
     , id = Math.floor(Math.random() * 10000) //Create semi-unique ID in case user doesn't select one
     , color = nv.utils.defaultColor()
     , valueFormat = d3.format(',.2f')
+    , labelFormat = d3.format('%')
     , showLabels = true
     , pieLabelsOutside = true
     , donutLabelsOutside = false
@@ -10472,11 +10477,13 @@ nv.models.pie = function() {
                       Adjust the label's y-position to remove the overlap.
                       */
                       var center = labelsArc.centroid(d);
-                      var hashKey = createHashKey(center);
-                      if (labelLocationHash[hashKey]) {
-                        center[1] -= avgHeight;
+                      if(d.value){
+                        var hashKey = createHashKey(center);
+                        if (labelLocationHash[hashKey]) {
+                          center[1] -= avgHeight;
+                        }
+                        labelLocationHash[createHashKey(center)] = true;
                       }
-                      labelLocationHash[createHashKey(center)] = true;
                       return 'translate(' + center + ')'
                     }
                 });
@@ -10487,7 +10494,7 @@ nv.models.pie = function() {
                   var labelTypes = {
                     "key" : getX(d.data),
                     "value": getY(d.data),
-                    "percent": d3.format('%')(percent)
+                    "percent": labelFormat(percent)
                   };
                   return (d.value && percent > labelThreshold) ? labelTypes[labelType] : '';
                 });
@@ -10646,6 +10653,12 @@ nv.models.pie = function() {
   chart.valueFormat = function(_) {
     if (!arguments.length) return valueFormat;
     valueFormat = _;
+    return chart;
+  };
+
+  chart.labelFormat = function(_) {
+    if (!arguments.length) return labelFormat;
+    labelFormat = _;
     return chart;
   };
 
@@ -10878,9 +10891,9 @@ nv.models.pieChart = function() {
   chart.dispatch = dispatch;
   chart.pie = pie;
 
-  d3.rebind(chart, pie, 'valueFormat', 'values', 'x', 'y', 'description', 'id', 'showLabels', 'donutLabelsOutside', 'pieLabelsOutside', 'labelType', 'donut', 'donutRatio', 'labelThreshold');
+  d3.rebind(chart, pie, 'valueFormat', 'labelFormat', 'values', 'x', 'y', 'description', 'id', 'showLabels', 'donutLabelsOutside', 'pieLabelsOutside', 'labelType', 'donut', 'donutRatio', 'labelThreshold');
   chart.options = nv.utils.optionsFunc.bind(chart);
-  
+
   chart.margin = function(_) {
     if (!arguments.length) return margin;
     margin.top    = typeof _.top    != 'undefined' ? _.top    : margin.top;
@@ -10986,6 +10999,7 @@ nv.models.scatter = function() {
     , yDomain      = null // Override y domain
     , xRange       = null // Override x range
     , yRange       = null // Override y range
+    , defaultYRange= [0,1] // Default y range (when no difference)
     , sizeDomain   = null // Override point size domain
     , sizeRange    = null
     , singlePoint  = false
@@ -11053,19 +11067,19 @@ nv.models.scatter = function() {
       if (x.domain()[0] === x.domain()[1])
         x.domain()[0] ?
             x.domain([x.domain()[0] - x.domain()[0] * 0.01, x.domain()[1] + x.domain()[1] * 0.01])
-          : x.domain([-1,1]);
+          : x.domain(defaultYRange);
 
       if (y.domain()[0] === y.domain()[1])
         y.domain()[0] ?
             y.domain([y.domain()[0] - y.domain()[0] * 0.01, y.domain()[1] + y.domain()[1] * 0.01])
-          : y.domain([-1,1]);
+          : y.domain(defaultYRange);
 
       if ( isNaN(x.domain()[0])) {
-          x.domain([-1,1]);
+          x.domain(defaultYRange);
       }
 
       if ( isNaN(y.domain()[0])) {
-          y.domain([-1,1]);
+          y.domain(defaultYRange);
       }
 
 
@@ -11113,17 +11127,14 @@ nv.models.scatter = function() {
         var vertices = d3.merge(data.map(function(group, groupIndex) {
             return group.values
               .map(function(point, pointIndex) {
-                // *Adding noise to make duplicates very unlikely
                 // *Injecting series and point index for reference
-                /* *Adding a 'jitter' to the points, because there's an issue in d3.geom.voronoi.
-                */
                 var pX = getX(point,pointIndex);
                 var pY = getY(point,pointIndex);
 
-                return [x(pX)+ Math.random() * 1e-7,
-                        y(pY)+ Math.random() * 1e-7,
+                return [x(pX),
+                        y(pY),
                         groupIndex,
-                        pointIndex, point]; //temp hack to add noise untill I think of a better way so there are no duplicates
+                        pointIndex, point];
               })
               .filter(function(pointArray, pointIndex) {
                 return pointActive(pointArray[4], pointIndex); // Issue #237.. move filter to after map, so pointIndex is correct!
@@ -11173,6 +11184,18 @@ nv.models.scatter = function() {
               [width + 10,height + 10],
               [width + 10,-10]
           ]);
+
+          // delete duplicates from vertices - essential assumption for d3.geom.voronoi
+          var epsilon = 1e-6; // d3 uses 1e-6 to determine equivalence.
+          vertices = vertices.sort(function(a,b){return ((a[0] - b[0]) || (a[1] - b[1]))});
+          for (var i = 0; i < vertices.length - 1; ) {
+           if ((Math.abs(vertices[i][0] - vertices[i+1][0]) < epsilon) &&
+          (Math.abs(vertices[i][1] - vertices[i+1][1]) < epsilon)) {
+             vertices.splice(i+1, 1);
+           } else {
+             i++;
+           }
+          }
 
           var voronoi = d3.geom.voronoi(vertices).map(function(d, i) {
               return {
@@ -11506,6 +11529,12 @@ nv.models.scatter = function() {
   chart.yRange = function(_) {
     if (!arguments.length) return yRange;
     yRange = _;
+    return chart;
+  };
+
+  chart.defaultYRange = function(_) {
+    if (!arguments.length) return defaultYRange;
+    defaultYRange = _;
     return chart;
   };
 
@@ -13376,6 +13405,7 @@ nv.models.stackedArea = function() {
     , id = Math.floor(Math.random() * 100000) //Create semi-unique ID incase user doesn't selet one
     , getX = function(d) { return d.x } // accessor to get the x value from a data point
     , getY = function(d) { return d.y } // accessor to get the y value from a data point
+    , defined = function(d,i) { return getY(d,i) !== null } // allows area to be not be drawn when it is not defined
     , style = 'stack'
     , offset = 'zero'
     , order = 'default'
@@ -13496,6 +13526,7 @@ nv.models.stackedArea = function() {
       g   .attr('clip-path', clipEdge ? 'url(#nv-edge-clip-' + id + ')' : '');
 
       var area = d3.svg.area()
+          .defined(defined)
           .x(function(d,i)  { return x(getX(d,i)) })
           .y0(function(d) {
               return y(d.display.y0)
