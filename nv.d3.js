@@ -1077,7 +1077,15 @@ nv.utils.optionsFunc = function(args) {
 
 
       if (ticks !== null)
-        axis.ticks(ticks);
+	// if ticks is an array, apply it to the function
+	// to pass multiple args to ticks method
+	if(Array.isArray(ticks)){
+	    axis.ticks.apply(null, ticks);
+	} else {
+ 	    axis.ticks(ticks);
+	}
+
+       
       else if (axis.orient() == 'top' || axis.orient() == 'bottom')
         axis.ticks(Math.abs(scale.range()[1] - scale.range()[0]) / 100);
 
@@ -5608,7 +5616,7 @@ nv.models.lineChart = function() {
       if (showXAxis) {
         xAxis
           .scale(x)
-          .ticks( availableWidth / 100 )
+          .ticks( xAxis.ticks() ? xAxis.ticks() : availableWidth / 100 )
           .tickSize(-availableHeight, 0);
 
         g.select('.nv-x.nv-axis')
@@ -5621,7 +5629,7 @@ nv.models.lineChart = function() {
       if (showYAxis) {
         yAxis
           .scale(y)
-          .ticks( availableHeight / 36 )
+          .ticks( yAxis.ticks() ? yAxis.ticks() : availableHeight / 36 )
           .tickSize( -availableWidth, 0);
 
         g.select('.nv-y.nv-axis')

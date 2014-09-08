@@ -57,7 +57,15 @@ nv.models.axis = function() {
 
 
       if (ticks !== null)
-        axis.ticks(ticks);
+	// if ticks is an array, apply it to the function
+	// to pass multiple args to ticks method
+	if(Array.isArray(ticks)){
+	    axis.ticks.apply(null, ticks);
+	} else {
+ 	    axis.ticks(ticks);
+	}
+
+       
       else if (axis.orient() == 'top' || axis.orient() == 'bottom')
         axis.ticks(Math.abs(scale.range()[1] - scale.range()[0]) / 100);
 
