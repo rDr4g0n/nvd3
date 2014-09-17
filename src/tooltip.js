@@ -459,8 +459,6 @@ window.nv.tooltip.* also has various helper methods.
                 break;
             }
 
-            console.log(gravity, left, top);
-
             container.style.left = left+'px';
             container.style.top = top+'px';
             container.style.opacity = 1;
