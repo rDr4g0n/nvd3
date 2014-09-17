@@ -430,7 +430,8 @@ window.nv.tooltip.* also has various helper methods.
                 // if tooltip will appear outside of the chart
                 if (left + width > boundRect.width) left = pos[0] - width - dist;
                 if (tTop < scrollTop) top = scrollTop + 5;
-                if (tTop + height > scrollTop + windowHeight) top = scrollTop + windowHeight - tTop + top - height;
+                // if tooltip will appear outside of the chart
+                if (top + height + dist > boundRect.height) top = boundRect.height - height - dist;
                 break;
               case 'n':
                 left = pos[0] - (width / 2) - 5;
@@ -458,6 +459,7 @@ window.nv.tooltip.* also has various helper methods.
                 break;
             }
 
+            console.log(gravity, left, top);
 
             container.style.left = left+'px';
             container.style.top = top+'px';
