@@ -28,6 +28,9 @@ nv.models.stackedAreaChart = function() {
         return '<h3>' + key + '</h3>' +
                '<p>' +  y + ' on ' + x + '</p>'
       }
+    , valueFormatter = function(d,i){
+        return yAxis.tickFormat()(d);
+      }
     , x //can be accessed via chart.xScale()
     , y //can be accessed via chart.yScale()
     , yAxisTickFormat = d3.format(',.2f')
@@ -574,6 +577,12 @@ nv.models.stackedAreaChart = function() {
   chart.tooltips = function(_) {
     if (!arguments.length) return tooltips;
     tooltips = _;
+    return chart;
+  };
+
+  chart.valueFormatter = function(_) {
+    if (!arguments.length) return valueFormatter;
+    valueFormatter = _;
     return chart;
   };
 
