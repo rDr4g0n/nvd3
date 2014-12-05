@@ -397,10 +397,6 @@ nv.models.stackedAreaChart = function() {
 
           var xValue = xAxis.tickFormat()(chart.x()(singlePoint,pointIndex));
 
-          //If we are in 'expand' mode, force the format to be a percentage.
-          var valueFormatter = (stacked.style() == 'expand') ?
-               function(d,i) {return d3.format(".1%")(d);} :
-               function(d,i) {return yAxis.tickFormat()(d); };
           interactiveLayer.tooltip
                   .position({left: pointXLocation + margin.left, top: e.mouseY + margin.top})
                   .chartContainer(that.parentNode)
