@@ -35,6 +35,9 @@ nv.models.stackedAreaChart = function() {
         , controlOptions = ['Stacked','Stream','Expanded']
         , controlLabels = {}
         , duration = 250
+        valueFormatter = function(d,i){
+            return yAxis.tickFormat()(d);
+        }
         ;
 
     state.style = stacked.style();
@@ -481,6 +484,11 @@ nv.models.stackedAreaChart = function() {
     chart.yAxis = yAxis;
     chart.interactiveLayer = interactiveLayer;
     chart.tooltip = tooltip;
+    chart.valueFormatter = function(_) {
+        if (!arguments.length) return valueFormatter;
+        valueFormatter = _;
+        return chart;
+    };
 
     chart.dispatch = dispatch;
     chart.options = nv.utils.optionsFunc.bind(chart);
