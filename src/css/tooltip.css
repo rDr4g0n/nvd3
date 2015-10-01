@@ -80,6 +80,9 @@
     border-spacing:0;
 }
 
+.nvtooltip table thead td {
+    padding-left: 4px;
+}
 
 .nvtooltip table td {
     padding: 2px 9px 2px 0;
