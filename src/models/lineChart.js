@@ -28,9 +28,12 @@ nv.models.lineChart = function() {
         , defaultState = null
         , noData = null
         , dispatch = d3.dispatch('tooltipShow', 'tooltipHide', 'stateChange', 'changeState', 'renderEnd')
-        , duration = 250,
-        valueFormatter = function(d,i){
+        , duration = 250
+        , valueFormatter = function(d,i){
             return yAxis.tickFormat()(d);
+        }
+        , headerFormatter = function(d,i){
+            return xAxis.tickFormat()(d, i);
         }
         ;
 
@@ -40,7 +43,7 @@ nv.models.lineChart = function() {
     tooltip.valueFormatter(function(d, i) {
         return yAxis.tickFormat()(d, i);
     }).headerFormatter(function(d, i) {
-        return xAxis.tickFormat()(d, i);
+        return headerFormatter(d, i);
     });
 
 
@@ -339,12 +342,6 @@ nv.models.lineChart = function() {
     chart.yAxis = yAxis;
     chart.interactiveLayer = interactiveLayer;
     chart.tooltip = tooltip;
-    chart.valueFormatter = function(_) {
-        if (!arguments.length) return valueFormatter;
-        valueFormatter = _;
-        return chart;
-    };
-
     chart.dispatch = dispatch;
     chart.options = nv.utils.optionsFunc.bind(chart);
 
@@ -357,6 +354,11 @@ nv.models.lineChart = function() {
         showYAxis:    {get: function(){return showYAxis;}, set: function(_){showYAxis=_;}},
         defaultState:    {get: function(){return defaultState;}, set: function(_){defaultState=_;}},
         noData:    {get: function(){return noData;}, set: function(_){noData=_;}},
+
+        // formatter for tooltip values
+        valueFormatter:    {get: function(){return valueFormatter;}, set: function(_){valueFormatter=_;}},
+        // formatter for tooltip header
+        headerFormatter:    {get: function(){return headerFormatter;}, set: function(_){headerFormatter=_;}},
 
         // deprecated options
         tooltips:    {get: function(){return tooltip.enabled();}, set: function(_){

@@ -34,9 +34,12 @@ nv.models.stackedAreaChart = function() {
         , controlWidth = 250
         , controlOptions = ['Stacked','Stream','Expanded']
         , controlLabels = {}
-        , duration = 250,
-        valueFormatter = function(d,i){
+        , duration = 250
+        , valueFormatter = function(d,i){
             return yAxis.tickFormat()(d);
+        }
+        , headerFormatter = function(d,i){
+            return xAxis.tickFormat()(d,i);
         }
         ;
 
@@ -46,7 +49,7 @@ nv.models.stackedAreaChart = function() {
 
     tooltip
         .headerFormatter(function(d, i) {
-            return xAxis.tickFormat()(d, i);
+            return headerFormatter(d, i);
         })
         .valueFormatter(function(d, i) {
             return valueFormatter(d,i);
@@ -54,7 +57,7 @@ nv.models.stackedAreaChart = function() {
 
     interactiveLayer.tooltip
         .headerFormatter(function(d, i) {
-            return xAxis.tickFormat()(d, i);
+            return headerFormatter(d, i);
         })
         .valueFormatter(function(d, i) {
             return valueFormatter(d,i);
@@ -484,12 +487,6 @@ nv.models.stackedAreaChart = function() {
     chart.yAxis = yAxis;
     chart.interactiveLayer = interactiveLayer;
     chart.tooltip = tooltip;
-    chart.valueFormatter = function(_) {
-        if (!arguments.length) return valueFormatter;
-        valueFormatter = _;
-        return chart;
-    };
-
     chart.dispatch = dispatch;
     chart.options = nv.utils.optionsFunc.bind(chart);
 
@@ -505,6 +502,11 @@ nv.models.stackedAreaChart = function() {
         showControls:    {get: function(){return showControls;}, set: function(_){showControls=_;}},
         controlLabels:    {get: function(){return controlLabels;}, set: function(_){controlLabels=_;}},
         controlOptions:    {get: function(){return controlOptions;}, set: function(_){controlOptions=_;}},
+
+        // formatter for tooltip values
+        valueFormatter:    {get: function(){return valueFormatter;}, set: function(_){valueFormatter=_;}},
+        // formatter for tooltip header
+        headerFormatter:    {get: function(){return headerFormatter;}, set: function(_){headerFormatter=_;}},
 
         // deprecated options
         tooltips:    {get: function(){return tooltip.enabled();}, set: function(_){
