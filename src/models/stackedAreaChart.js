@@ -34,7 +34,7 @@ nv.models.stackedAreaChart = function() {
         , controlWidth = 250
         , controlOptions = ['Stacked','Stream','Expanded']
         , controlLabels = {}
-        , duration = 250
+        , duration = 250,
         valueFormatter = function(d,i){
             return yAxis.tickFormat()(d);
         }
@@ -49,7 +49,7 @@ nv.models.stackedAreaChart = function() {
             return xAxis.tickFormat()(d, i);
         })
         .valueFormatter(function(d, i) {
-            return yAxis.tickFormat()(d, i);
+            return valueFormatter(d,i);
         });
 
     interactiveLayer.tooltip
@@ -57,7 +57,7 @@ nv.models.stackedAreaChart = function() {
             return xAxis.tickFormat()(d, i);
         })
         .valueFormatter(function(d, i) {
-            return yAxis.tickFormat()(d, i);
+            return valueFormatter(d,i);
         });
 
     var oldYTickFormat = null,
