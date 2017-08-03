@@ -6,7 +6,9 @@
  */
 nv.dom.write = function(callback) {
 	if (window.fastdom !== undefined) {
-		return fastdom.write(callback);
+		// ZEN-28128 old fastdom read/write methods
+		// renamed to newer mutate/measure method names
+		return fastdom.mutate(callback);
 	}
 	return callback();
 };
@@ -19,7 +21,7 @@ nv.dom.write = function(callback) {
  */
 nv.dom.read = function(callback) {
 	if (window.fastdom !== undefined) {
-		return fastdom.read(callback);
+		return fastdom.measure(callback);
 	}
 	return callback();
 };
